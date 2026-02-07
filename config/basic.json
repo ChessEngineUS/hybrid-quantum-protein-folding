@@ -1,0 +1,16 @@
+{
+  "batch_size": 1,
+  "n_epochs": 50,
+  "n_candidates": 10,
+  "lr_generator": 0.0001,
+  "lr_hamiltonian": 0.00001,
+  "lr_surrogate": 0.0001,
+  "weight_decay": 0.00001,
+  "grad_clip": 1.0,
+  "validation_freq": 5,
+  "checkpoint_freq": 10,
+  "surrogate_refresh_freq": 100,
+  "early_stopping_patience": 20,
+  "checkpoint_dir": "./checkpoints",
+  "log_dir": "./logs"
+}

@@ -1,0 +1,21 @@
+{
+  "batch_size": 1,
+  "n_epochs": 75,
+  "n_candidates": 20,
+  "lr_generator": 0.0001,
+  "lr_hamiltonian": 0.00001,
+  "lr_surrogate": 0.0001,
+  "weight_decay": 0.00001,
+  "grad_clip": 1.0,
+  "validation_freq": 5,
+  "checkpoint_freq": 10,
+  "surrogate_refresh_freq": 75,
+  "early_stopping_patience": 25,
+  "checkpoint_dir": "./checkpoints_idr",
+  "log_dir": "./logs_idr",
+  "use_quantum": false,
+  "quantum_fraction": 0.15,
+  "dataset_type": "idr",
+  "n_residues": 40,
+  "output_type": "lattice"
+}

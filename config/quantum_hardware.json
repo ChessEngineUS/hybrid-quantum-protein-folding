@@ -1,0 +1,20 @@
+{
+  "batch_size": 1,
+  "n_epochs": 100,
+  "n_candidates": 10,
+  "lr_generator": 0.0001,
+  "lr_hamiltonian": 0.00001,
+  "lr_surrogate": 0.0001,
+  "weight_decay": 0.00001,
+  "grad_clip": 1.0,
+  "validation_freq": 10,
+  "checkpoint_freq": 20,
+  "surrogate_refresh_freq": 50,
+  "early_stopping_patience": 30,
+  "checkpoint_dir": "./checkpoints_quantum",
+  "log_dir": "./logs_quantum",
+  "use_quantum": true,
+  "quantum_fraction": 0.1,
+  "backend": "ibm",
+  "ibm_backend": "ibm_osaka"
+}
