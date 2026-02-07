@@ -7,6 +7,14 @@
 
 A novel hybrid framework integrating the Variational Quantum Eigensolver (VQE) with deep neural networks to address protein structure prediction in regimes where current classical methods fail: intrinsically disordered regions (IDRs), metamorphic proteins, and proteins under mechanical force.
 
+## 📖 Documentation
+
+- **[Getting Started Guide](docs/GETTING_STARTED.md)** - Perfect for beginners! Step-by-step installation and first prediction
+- **[Quick Start Guide](docs/QUICKSTART.md)** - Fast-track to using the framework with examples
+- **[Architecture Documentation](docs/ARCHITECTURE.md)** - Detailed system design and implementation
+- **[Contributing Guidelines](CONTRIBUTING.md)** - How to contribute to the project
+- **[Changelog](CHANGELOG.md)** - Version history and release notes
+
 ## 🎯 Key Innovation
 
 **Conditional, sequence-aware quantum Hamiltonians** trained end-to-end such that quantum-evaluated energies rank biologically relevant conformations above decoys, specifically in systems where AlphaFold-class predictors underperform.
@@ -62,49 +70,52 @@ cd hybrid-quantum-protein-folding
 pip install -e .
 ```
 
+**First time?** Check out the [Getting Started Guide](docs/GETTING_STARTED.md) for detailed setup instructions!
+
 ### Basic Usage
 
 ```python
-from hqpf.models import HybridQuantumModel
-from hqpf.data import load_benchmark_protein
-from hqpf.training import Trainer
+from hqpf.models import HybridModel
+import torch
 
-# Load a benchmark protein (e.g., p53-TAD core region)
-protein = load_benchmark_protein('p53_tad', residues=20)
+# Define a protein sequence
+sequence_str = "ACDEFGHIKLMNPQRSTVWY"
+aa_to_idx = {'A': 0, 'R': 1, 'N': 2, 'D': 3, 'C': 4, 'Q': 5, 'E': 6, 'G': 7,
+             'H': 8, 'I': 9, 'L': 10, 'K': 11, 'M': 12, 'F': 13, 'P': 14,
+             'S': 15, 'T': 16, 'W': 17, 'Y': 18, 'V': 19}
+sequence = torch.tensor([aa_to_idx[aa] for aa in sequence_str], dtype=torch.long)
 
 # Initialize hybrid model
-model = HybridQuantumModel(
-    n_qubits=24,
-    ansatz_depth=4,
-    gnn_hidden_dim=128,
-    use_surrogate=True
-)
-
-# Train on IBM quantum hardware
-trainer = Trainer(
-    model=model,
-    backend='ibm_falcon',
-    surrogate_refresh_interval=100
-)
-
-trainer.train(
-    protein=protein,
-    epochs=50,
-    batch_size=8
+model = HybridModel(
+    n_residues=len(sequence),
+    n_qubits=20,
+    use_quantum=False,  # Use simulator for quick testing
+    device='cpu'
 )
 
 # Predict structure
-predicted_structure = model.predict(protein.sequence)
+model.eval()
+with torch.no_grad():
+    outputs = model(sequence, n_candidates=10)
+
+best_structure = outputs['best_structure']
+print(f"Predicted structure shape: {best_structure.shape}")
+print(f"Best energy: {outputs['best_energy'].item():.4f}")
 ```
+
+**More examples:** See [Quick Start Guide](docs/QUICKSTART.md) and [examples/](examples/) directory.
 
 ### Running Benchmarks
 
 ```bash
 # Run on all target problems
-python scripts/run_benchmark.py --problem_set all --backend ibm_falcon
+python examples/benchmark_idrs.py --output_dir ./results
 
-# Specific problem with comparison to baselines
-python scripts/run_benchmark.py --problem p53_tad --compare alphafold rosetta
+# Training from scratch
+python examples/train_basic.py --config config/default_config.yaml
+
+# Inference from checkpoint
+python examples/inference_demo.py --sequence ACDEFGHIKL --checkpoint model.pt
 ```
 
 ## 📊 Performance Metrics
@@ -122,62 +133,39 @@ python scripts/run_benchmark.py --problem p53_tad --compare alphafold rosetta
 - **Fallback**: PennyLane simulators for development
 
 ### Classical Computing
-- GPU: NVIDIA V100/A100 recommended for GNN training
-- RAM: 32GB minimum
-- Storage: 100GB for benchmark datasets
+- **Minimum**: 8GB RAM, CPU, 10GB storage
+- **Recommended**: 32GB RAM, NVIDIA GPU (V100/A100), 100GB storage
 
 ## 📁 Repository Structure
 
 ```
 hybrid-quantum-protein-folding/
-├── hqpf/
-│   ├── __init__.py
-│   ├── models/
-│   │   ├── hybrid_model.py          # Main hybrid Q+classical model
-│   │   ├── quantum_hamiltonian.py   # Parametric Hamiltonian
-│   │   ├── vqe_solver.py            # VQE implementation
-│   │   ├── structure_generator.py   # GNN structure decoder
-│   │   └── surrogate.py             # CNN surrogate model
-│   ├── data/
-│   │   ├── coarse_grained.py        # Lattice/dihedral encoding
-│   │   ├── benchmarks.py            # Target protein datasets
-│   │   └── loaders.py               # Data loading utilities
-│   ├── training/
-│   │   ├── trainer.py               # Training loop
-│   │   ├── losses.py                # Hybrid loss functions
-│   │   └── optimizers.py            # Custom optimizers
-│   ├── quantum/
-│   │   ├── circuits.py              # Quantum circuit construction
-│   │   ├── ansatz.py                # Hardware-efficient & PIA ansatz
-│   │   ├── backends.py              # Backend management
-│   │   └── error_mitigation.py      # ZNE, readout correction
-│   ├── classical/
-│   │   ├── energy_terms.py          # Classical potentials
-│   │   └── baseline_models.py       # Rosetta, AlphaFold wrappers
-│   └── utils/
-│       ├── metrics.py               # RMSD, TM-score, ΔΔG
-│       ├── visualization.py         # Structure plotting
-│       └── logging.py               # Experiment tracking
-├── scripts/
-│   ├── run_benchmark.py
-│   ├── train_hamiltonian.py
-│   └── analyze_results.py
-├── notebooks/
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_quantum_circuits.ipynb
-│   └── 03_training_visualization.ipynb
-├── tests/
-│   ├── test_quantum_hamiltonian.py
-│   ├── test_vqe.py
-│   └── test_structure_generator.py
-├── data/
-│   └── benchmarks/                  # Benchmark protein data
-├── configs/
+├── hqpf/                            # Main package
+│   ├── models/                      # Hybrid Q+classical models
+│   ├── data/                        # Data loading and encoding
+│   ├── training/                    # Training loops and losses
+│   ├── quantum/                     # Quantum circuits and backends
+│   ├── classical/                   # Classical energy functions
+│   └── utils/                       # Metrics and visualization
+├── examples/                        # Example scripts
+│   ├── train_basic.py
+│   ├── inference_demo.py
+│   └── benchmark_idrs.py
+├── notebooks/                       # Jupyter tutorials
+│   └── tutorial.ipynb
+├── docs/                            # Documentation
+│   ├── GETTING_STARTED.md
+│   ├── QUICKSTART.md
+│   └── ARCHITECTURE.md
+├── config/                          # Configuration files
 │   └── default_config.yaml
-├── requirements.txt
-├── setup.py
-├── LICENSE
-└── README.md
+├── tests/                           # Unit tests
+├── requirements.txt                 # Dependencies
+├── setup.py                         # Package setup
+├── CONTRIBUTING.md                  # Contribution guidelines
+├── CHANGELOG.md                     # Version history
+├── LICENSE                          # MIT License
+└── README.md                        # This file
 ```
 
 ## 🧪 Experimental Validation
@@ -210,7 +198,25 @@ If you use this code in your research, please cite:
 
 ## 🤝 Contributing
 
-Contributions welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- How to report bugs
+- How to suggest enhancements
+- Development setup
+- Code style guidelines
+- Testing requirements
+- Pull request process
+
+## 🎓 Learning Resources
+
+### Tutorials
+- [Getting Started Guide](docs/GETTING_STARTED.md) - Complete beginner's guide
+- [Jupyter Tutorial](notebooks/tutorial.ipynb) - Interactive walkthrough
+- [Quick Start](docs/QUICKSTART.md) - Fast-track usage examples
+
+### Background Reading
+- **Quantum Computing**: [Qiskit Textbook](https://qiskit.org/textbook)
+- **Protein Structure**: [PDB-101](https://pdb101.rcsb.org/)
+- **VQE Algorithms**: [PennyLane VQE Tutorial](https://pennylane.ai/qml/demos/tutorial_vqe.html)
 
 ## 📄 License
 
@@ -218,17 +224,52 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- IBM Quantum for hardware access
-- Baker Lab for protein design insights
-- Aspuru-Guzik group for quantum chemistry methodologies
+- **IBM Quantum** for hardware access and support
+- **Baker Lab (IPD)** for protein design insights and methodologies
+- **Aspuru-Guzik Group** for quantum chemistry frameworks
+- **Open-source community** for PyTorch, Qiskit, and PennyLane
 
 ## 📧 Contact
 
 **Tommaso R. Marena**  
-Email: [Your Email]  
 GitHub: [@ChessEngineUS](https://github.com/ChessEngineUS)  
-LinkedIn: [Your LinkedIn]
+Project Link: [https://github.com/ChessEngineUS/hybrid-quantum-protein-folding](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding)
+
+## 🔗 Links
+
+- **Documentation**: [docs/](docs/)
+- **Issues**: [GitHub Issues](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/discussions)
+- **Examples**: [examples/](examples/)
+- **Notebooks**: [notebooks/](notebooks/)
+
+## ⭐ Star History
+
+If you find this project useful, please consider giving it a star! ⭐
+
+## 🗺️ Roadmap
+
+- [x] Core framework implementation
+- [x] VQE with learned Hamiltonians
+- [x] Surrogate model for efficiency
+- [x] Benchmark datasets
+- [x] Example scripts
+- [x] Comprehensive documentation
+- [ ] Pre-trained models
+- [ ] Web interface for predictions
+- [ ] Integration with AlphaFold3
+- [ ] Support for post-translational modifications
+- [ ] Real-time quantum circuit monitoring
+- [ ] Automated hyperparameter tuning
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
 ---
 
-*"Combining quantum superposition with learned priors to explore protein conformational space where classical methods fail."*
+<div align="center">
+
+**"Combining quantum superposition with learned priors to explore protein conformational space where classical methods fail."**
+
+🧬 + ⚛️ + 🤖 = 🚀
+
+</div>
