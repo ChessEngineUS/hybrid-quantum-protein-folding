@@ -20,7 +20,7 @@ from .surrogate import SurrogateModel
 from .quantum_hamiltonian import QuantumHamiltonian
 
 
-class HybridModel(nn.Module):
+class HybridQuantumModel(nn.Module):
     """
     End-to-end hybrid quantum-classical protein structure prediction.
     
@@ -49,7 +49,7 @@ class HybridModel(nn.Module):
         n_gnn_layers: int = 4,
         n_vqe_layers: int = 3,
         use_quantum: bool = False,
-        backend: str = 'qiskit',
+        backend: str = 'simulator',
         surrogate_refresh_freq: int = 100,
         quantum_fraction: float = 0.1,
         output_type: str = 'lattice',
@@ -80,12 +80,12 @@ class HybridModel(nn.Module):
             n_qubits=n_qubits
         ).to(device)
         
-        # VQE solver
+        # VQE solver - FIXED: use ansatz_depth instead of n_layers
         self.vqe_solver = VQESolver(
             n_qubits=n_qubits,
-            n_layers=n_vqe_layers,
+            ansatz_depth=n_vqe_layers,
             backend=backend,
-            use_real_backend=use_quantum
+            use_error_mitigation=True
         )
         
         # Surrogate model
@@ -224,9 +224,9 @@ class HybridModel(nn.Module):
         pauli_hamiltonian = self.hamiltonian.to_pauli_operators(hamiltonian_matrix)
         
         # Run VQE
-        result = self.vqe_solver.run(pauli_hamiltonian)
+        result = self.vqe_solver.forward(pauli_hamiltonian)
         
-        return torch.tensor(result['energy'], dtype=torch.float32, device=self.device)
+        return result
     
     def _evaluate_surrogate(
         self,
@@ -298,7 +298,7 @@ class HybridModel(nn.Module):
         # Compute burial (contact count)
         contact_map = self._compute_contact_map(structure)
         burial = contact_map.sum(dim=1)  # (n_residues,)
-        burial_normalized = burial / burial.max()
+        burial_normalized = burial / (burial.max() + 1e-8)
         
         # Energy: hydrophobic residues prefer buried, hydrophilic prefer surface
         energy = -torch.sum(hydro_values * burial_normalized)
@@ -327,7 +327,7 @@ class HybridModel(nn.Module):
         """
         # Radius of gyration
         center = structure.mean(dim=0)
-        rg = torch.sqrt(torch.mean(torch.sum((structure - center) ** 2, dim=1)))
+        rg = torch.sqrt(torch.mean(torch.sum((structure - center) ** 2, dim=1)) + 1e-8)
         
         # Penalty proportional to Rg
         return 0.1 * rg
@@ -350,7 +350,7 @@ class HybridModel(nn.Module):
         n_residues = structure.shape[0]
         
         # Pairwise distances
-        dist_matrix = torch.cdist(structure, structure, p=2)
+        dist_matrix = torch.cdist(structure.unsqueeze(0), structure.unsqueeze(0), p=2).squeeze(0)
         
         # Binary contacts
         contact_map = (dist_matrix < cutoff).float()
@@ -461,7 +461,7 @@ class HybridModel(nn.Module):
         """
         # Unaligned RMSD
         diff = pred - target
-        rmsd = torch.sqrt(torch.mean(torch.sum(diff ** 2, dim=1)))
+        rmsd = torch.sqrt(torch.mean(torch.sum(diff ** 2, dim=1)) + 1e-8)
         
         return rmsd
     
@@ -562,3 +562,7 @@ class HybridModel(nn.Module):
             loss_dict['surrogate'] = loss_surr
         
         return loss_dict
+
+
+# Alias for convenience
+HybridModel = HybridQuantumModel
