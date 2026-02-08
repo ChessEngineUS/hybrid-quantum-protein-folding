@@ -5,35 +5,21 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![arXiv](https://img.shields.io/badge/arXiv-2026.xxxxx-b31b1b.svg)](https://arxiv.org/abs/2026.xxxxx)
 
-A groundbreaking hybrid quantum-classical deep learning framework for *ab initio* protein structure prediction, combining Variational Quantum Eigensolvers (VQE) with Graph Neural Networks (GNN) for unprecedented accuracy and efficiency.
+A hybrid quantum-classical deep learning framework for protein structure prediction, combining Variational Quantum Eigensolvers (VQE) with Graph Neural Networks (GNN).
 
-## 🌟 Key Innovation
+## 🌟 Key Features
 
-This is the **first** implementation integrating:
 - ⚛️ **Quantum Energy Evaluation**: VQE-based conformational energy estimation
 - 🕷️ **Neural Structure Generation**: GNN-powered 3D coordinate prediction
 - ⚡ **End-to-End Differentiable**: Gradients flow through both quantum and classical components
 - 🚀 **Production-Ready**: Comprehensive tests, CI/CD, and Docker support
-
-## 📊 Key Results
-
-| Metric | Value | Comparison |
-|--------|-------|------------|
-| **Accuracy (TM-score)** | 0.82±0.07 | Competitive with AlphaFold2 on small proteins |
-| **Speed** | ~2.3s per 50-residue protein | 5-10x faster than pure quantum |
-| **Quantum Advantage** | 23% energy improvement | vs. classical-only baseline |
-| **Scalability** | Up to 200 residues | Hybrid architecture enables scaling |
-| **GPU Acceleration** | 8.7x speedup | On NVIDIA T4 |
 
 ## 🚀 Quick Start
 
 ### Google Colab (Fastest)
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChessEngineUS/hybrid-quantum-protein-folding/blob/main/notebooks/colab_quickstart.ipynb)
-
-Click the badge above for a zero-setup experience!
 
 ### Local Installation
 
@@ -74,7 +60,7 @@ sequence = protein.to_tensor(AA_TO_IDX, device='cuda')
 model = HybridModel(
     n_residues=len(sequence),
     n_qubits=10,
-    use_quantum=True,  # Enable quantum evaluation
+    use_quantum=True,
     device='cuda'
 )
 
@@ -150,7 +136,6 @@ Amino Acid Sequence
 - ✅ VQE-based energy evaluation
 - ✅ Multiple ansatz types (hardware-efficient, real amplitudes)
 - ✅ Qiskit integration (Aer simulators + IBM Quantum)
-- ✅ Error mitigation strategies
 - ✅ Circuit optimization
 - ✅ Quantum-classical gradient flow
 
@@ -163,9 +148,9 @@ Amino Acid Sequence
 - ✅ Distributed training (DDP)
 
 ### Production Features
-- ✅ Comprehensive test suite (>80% coverage)
+- ✅ Comprehensive test suite (>80% coverage target)
 - ✅ CI/CD with GitHub Actions
-- ✅ Code quality tools (Black, Flake8, MyPy)
+- ✅ Code quality tools (Black, Flake8, MyPy, Pylint)
 - ✅ Docker containerization
 - ✅ Extensive documentation
 - ✅ Benchmark datasets included
@@ -177,7 +162,6 @@ Amino Acid Sequence
 - [Architecture Overview](docs/ARCHITECTURE.md)
 - [API Reference](docs/API.md)
 - [Training Guide](docs/TRAINING.md)
-- [Benchmarks](docs/BENCHMARKS.md)
 - [Contributing](CONTRIBUTING.md)
 - [Publication Checklist](docs/PUBLICATION_CHECKLIST.md)
 
@@ -197,32 +181,6 @@ Amino Acid Sequence
 - 16GB RAM
 - IBM Quantum account (optional)
 
-## 🏆 Benchmarks
-
-### Accuracy (TM-score)
-
-| Dataset | HQPF | AlphaFold2 | ESMFold | RosettaFold |
-|---------|------|------------|---------|-------------|
-| CASP14 (short) | **0.82** | 0.87 | 0.79 | 0.76 |
-| CAMEO (recent) | **0.78** | 0.84 | 0.77 | 0.73 |
-| Miniproteins | **0.85** | 0.83 | 0.80 | 0.78 |
-
-### Speed (seconds per protein)
-
-| Protein Length | HQPF | AlphaFold2 | ESMFold |
-|----------------|------|------------|----------|
-| 50 residues | **2.3** | 15.7 | 0.8 |
-| 100 residues | **8.1** | 42.3 | 1.9 |
-| 200 residues | **28.4** | 156.8 | 6.2 |
-
-*Benchmarks on NVIDIA T4 GPU*
-
-### Quantum Advantage
-
-- **23% lower energy** compared to classical-only optimization
-- **Quantum circuits scale** as O(n log n) with protein length
-- **Hybrid approach** provides best accuracy/speed tradeoff
-
 ## 🔬 Testing
 
 ```bash
@@ -240,19 +198,6 @@ pytest tests/benchmarks/ -v --benchmark-only
 # Run with markers
 pytest -m "not slow"  # Skip slow tests
 pytest -m gpu  # GPU tests only
-```
-
-## 📝 Citation
-
-If you use this work, please cite:
-
-```bibtex
-@article{marena2026hybrid,
-  title={Hybrid Quantum-Classical Deep Learning for Ab Initio Protein Structure Prediction},
-  author={Marena, Tommaso R.},
-  journal={arXiv preprint arXiv:2026.xxxxx},
-  year={2026}
-}
 ```
 
 ## 🤝 Contributing
@@ -296,22 +241,8 @@ See [Issues](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/iss
 ### Version 0.3.0 (Q3 2026)
 - [ ] Protein design capabilities
 - [ ] Mutation effect prediction
-- [ ] Integration with AlphaFold features
 - [ ] Uncertainty quantification
 - [ ] Cloud deployment
-
-## 🎓 Educational Resources
-
-- [Tutorial 1: Quantum Computing Basics](notebooks/tutorial_01_quantum_basics.ipynb)
-- [Tutorial 2: GNN for Proteins](notebooks/tutorial_02_gnn_proteins.ipynb)
-- [Tutorial 3: Training Custom Models](notebooks/tutorial_03_training.ipynb)
-- [Tutorial 4: Advanced Analysis](notebooks/tutorial_04_analysis.ipynb)
-
-## 💬 Community
-
-- [GitHub Discussions](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/discussions)
-- [Discord Server](https://discord.gg/hqpf)
-- [Twitter](https://twitter.com/hqpf_ai)
 
 ## 📜 License
 
@@ -333,8 +264,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - Quantum computing infrastructure: IBM Quantum
 - GPU computing: Google Colab, NVIDIA
-- Protein databases: PDB, CASP, CAMEO
-- Open-source community: PyTorch, Qiskit, NetworkX
+- Protein databases: PDB
+- Open-source community: PyTorch, Qiskit
 
 ---
 
