@@ -1,0 +1,310 @@
+name: Comprehensive CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+env:
+  PYTHON_VERSION: '3.10'
+  PYTORCH_VERSION: '2.0.0'
+
+jobs:
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort mypy pylint bandit safety
+          pip install -r requirements.txt
+          pip install -e .
+          
+      - name: Run Black (code formatting)
+        run: black --check --diff hqpf/ tests/
+        
+      - name: Run isort (import sorting)
+        run: isort --check-only --diff hqpf/ tests/
+        
+      - name: Run Flake8 (style guide)
+        run: flake8 hqpf/ tests/ --max-line-length=100 --extend-ignore=E203,W503
+        
+      - name: Run Pylint (code analysis)
+        run: pylint hqpf/ --rcfile=.pylintrc --exit-zero
+        continue-on-error: true
+        
+      - name: Run MyPy (type checking)
+        run: mypy hqpf/ --ignore-missing-imports --no-strict-optional
+        continue-on-error: true
+        
+      - name: Run Bandit (security check)
+        run: bandit -r hqpf/ -ll
+        
+      - name: Check dependencies for vulnerabilities
+        run: safety check --json
+        continue-on-error: true
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.9', '3.10', '3.11']
+        
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-py${{ matrix.python-version }}-pip-${{ hashFiles('requirements.txt') }}
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-xdist pytest-timeout pytest-benchmark
+          pip install -r requirements.txt
+          pip install -e .
+          
+      - name: Run unit tests
+        run: |
+          pytest tests/unit/ -v \
+            --cov=hqpf \
+            --cov-report=xml \
+            --cov-report=term \
+            --timeout=300 \
+            -n auto
+            
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-${{ matrix.os }}-py${{ matrix.python-version }}
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov
+          pip install -r requirements.txt
+          pip install -e .
+          
+      - name: Run integration tests
+        run: |
+          pytest tests/integration/ -v \
+            --cov=hqpf \
+            --cov-report=xml \
+            --timeout=600
+            
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: integration
+
+  gpu-tests:
+    name: GPU Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+          pip install -e .
+          
+      - name: Run CPU fallback tests
+        run: |
+          pytest tests/unit/ -v -m "not gpu" --timeout=300
+
+  quantum-tests:
+    name: Quantum Simulation Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-timeout
+          pip install -r requirements.txt
+          pip install -e .
+          
+      - name: Run quantum backend tests
+        run: |
+          pytest tests/unit/test_vqe_solver.py -v --timeout=600
+          pytest tests/unit/test_quantum_optimizer.py -v --timeout=600
+
+  benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-benchmark
+          pip install -r requirements.txt
+          pip install -e .
+          
+      - name: Run benchmarks
+        run: |
+          pytest tests/benchmarks/ -v \
+            --benchmark-only \
+            --benchmark-autosave \
+            --benchmark-json=benchmark_results.json
+            
+      - name: Store benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark_results.json
+
+  documentation:
+    name: Documentation Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
+          pip install -r requirements.txt
+          pip install -e .
+          
+      - name: Build documentation
+        run: |
+          cd docs
+          make html
+          
+      - name: Upload documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs/_build/html/
+
+  notebook-tests:
+    name: Notebook Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install jupyter nbconvert nbformat pytest
+          pip install -r requirements.txt
+          pip install -e .
+          
+      - name: Test notebooks
+        run: |
+          jupyter nbconvert --to notebook --execute notebooks/*.ipynb --output-dir=/tmp/
+
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: hqpf:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  release-check:
+    name: Release Readiness
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [code-quality, unit-tests, integration-tests, quantum-tests]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check version consistency
+        run: |
+          VERSION=$(python -c "import hqpf; print(hqpf.__version__)")
+          echo "Package version: $VERSION"
+          
+      - name: Validate CHANGELOG
+        run: |
+          grep -q "## \[" CHANGELOG.md || exit 1
+          
+      - name: Check git tags
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
