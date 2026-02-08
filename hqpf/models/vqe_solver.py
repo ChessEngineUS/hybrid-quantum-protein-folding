@@ -13,7 +13,17 @@ import torch
 import torch.nn as nn
 from qiskit import QuantumCircuit, transpile
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.primitives import Estimator
+
+# Updated import for Qiskit 1.0+
+try:
+    from qiskit.primitives import StatevectorEstimator as Estimator
+except ImportError:
+    try:
+        from qiskit.primitives import Estimator
+    except ImportError:
+        # Fallback for older versions
+        from qiskit_aer.primitives import Estimator
+
 from qiskit_aer import AerSimulator
 from typing import Optional, Dict, Tuple, List, Callable
 import logging
@@ -55,7 +65,13 @@ class VQESolver(nn.Module):
         
         # Initialize backend
         self.backend = self._initialize_backend()
-        self.estimator = Estimator()
+        
+        # Initialize estimator
+        try:
+            self.estimator = Estimator()
+        except TypeError:
+            # Some versions require backend argument
+            self.estimator = Estimator(backend=self.backend)
         
         # Ansatz parameters
         n_params = self._count_parameters()
@@ -224,32 +240,52 @@ class VQESolver(nn.Module):
         circuit = self.construct_ansatz(params_np)
         
         # Transpile for backend
-        transpiled_circuit = transpile(
-            circuit,
-            backend=self.backend,
-            optimization_level=self.optimization_level
-        )
+        try:
+            transpiled_circuit = transpile(
+                circuit,
+                backend=self.backend,
+                optimization_level=self.optimization_level
+            )
+        except Exception:
+            # If transpilation fails, use circuit as is
+            transpiled_circuit = circuit
         
         # Measure expectation value
         try:
             # Use Qiskit Estimator primitive
-            job = self.estimator.run(transpiled_circuit, hamiltonian, shots=self.shots)
+            # Updated API for Qiskit 1.0+
+            job = self.estimator.run([(transpiled_circuit, hamiltonian)])
             result = job.result()
-            energy = result.values[0]
+            
+            # Extract energy value - API varies by version
+            try:
+                energy = result.values[0]
+            except (AttributeError, IndexError):
+                try:
+                    energy = result[0].data.evs
+                except AttributeError:
+                    energy = float(result[0])
+            
         except Exception as e:
-            logger.error(f"VQE evaluation failed: {e}")
-            # Fallback: return large penalty
-            energy = 1e6
+            logger.error(f"VQE evaluation failed: {e}. Using fallback.")
+            # Fallback: compute expectation value directly
+            try:
+                from qiskit.quantum_info import Statevector
+                sv = Statevector(transpiled_circuit)
+                energy = sv.expectation_value(hamiltonian).real
+            except Exception as e2:
+                logger.error(f"Fallback also failed: {e2}. Returning penalty.")
+                energy = 1e6
         
         # Apply error mitigation if enabled
-        if self.use_error_mitigation:
+        if self.use_error_mitigation and energy < 1e5:
             energy = self._apply_error_mitigation(energy)
         
         # Convert back to torch
-        energy_tensor = torch.tensor(energy, dtype=torch.float32, requires_grad=True)
+        energy_tensor = torch.tensor(float(energy), dtype=torch.float32, requires_grad=True)
         
         # Store history
-        self.energy_history.append(energy)
+        self.energy_history.append(float(energy))
         self.parameter_history.append(params_np.copy())
         
         return energy_tensor
