@@ -17,9 +17,16 @@ A hybrid quantum-classical deep learning framework for protein structure predict
 
 ## 🚀 Quick Start
 
-### Google Colab (Fastest)
+### 📓 Interactive Notebooks (Google Colab)
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChessEngineUS/hybrid-quantum-protein-folding/blob/main/notebooks/colab_quickstart.ipynb)
+Click any badge below to open in Google Colab (zero setup required!):
+
+| Notebook | Description | Colab Link |
+|----------|-------------|------------|
+| **Quickstart** | Basic usage and first predictions | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChessEngineUS/hybrid-quantum-protein-folding/blob/main/notebooks/colab_quickstart.ipynb) |
+| **Tutorial** | Complete walkthrough | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChessEngineUS/hybrid-quantum-protein-folding/blob/main/notebooks/tutorial.ipynb) |
+| **Advanced Analysis** | Contact maps, RMSD, PCA | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChessEngineUS/hybrid-quantum-protein-folding/blob/main/notebooks/advanced_analysis.ipynb) |
+| **Quantum Circuits** | VQE optimization, Hamiltonians | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChessEngineUS/hybrid-quantum-protein-folding/blob/main/notebooks/quantum_circuits.ipynb) |
 
 ### Local Installation
 
@@ -158,12 +165,11 @@ Amino Acid Sequence
 
 ## 📚 Documentation
 
-- [Installation Guide](docs/INSTALLATION.md)
 - [Architecture Overview](docs/ARCHITECTURE.md)
 - [API Reference](docs/API.md)
-- [Training Guide](docs/TRAINING.md)
-- [Contributing](CONTRIBUTING.md)
+- [Contributing Guidelines](CONTRIBUTING.md)
 - [Publication Checklist](docs/PUBLICATION_CHECKLIST.md)
+- [Colab Instructions](notebooks/COLAB_INSTRUCTIONS.md)
 
 ## 📋 Requirements
 
