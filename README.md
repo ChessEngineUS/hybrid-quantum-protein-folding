@@ -1,11 +1,29 @@
 # Hybrid Quantum-AI Energy Fusion for Protein Structure Prediction
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![Qiskit](https://img.shields.io/badge/qiskit-1.0%2B-purple)
-![PyTorch](https://img.shields.io/badge/pytorch-2.2%2B-red)
+[![CI](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/actions/workflows/ci.yml/badge.svg)](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/actions/workflows/ci.yml)
+[![Release](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/actions/workflows/release.yml/badge.svg)](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/actions/workflows/release.yml)
+[![codecov](https://codecov.io/gh/ChessEngineUS/hybrid-quantum-protein-folding/branch/main/graph/badge.svg)](https://codecov.io/gh/ChessEngineUS/hybrid-quantum-protein-folding)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
+[![Qiskit](https://img.shields.io/badge/qiskit-1.0%2B-purple)](https://qiskit.org/)
+[![PyTorch](https://img.shields.io/badge/pytorch-2.2%2B-red)](https://pytorch.org/)
+[![Docker](https://img.shields.io/badge/docker-available-blue)](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/pkgs/container/hybrid-quantum-protein-folding)
+[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChessEngineUS/hybrid-quantum-protein-folding/blob/main/notebooks/colab_quickstart.ipynb)
 
 A novel hybrid framework integrating the Variational Quantum Eigensolver (VQE) with deep neural networks to address protein structure prediction in regimes where current classical methods fail: intrinsically disordered regions (IDRs), metamorphic proteins, and proteins under mechanical force.
+
+## 🚀 Try It Now!
+
+**Google Colab Notebooks** (no installation required):
+
+- [![Open Quickstart](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChessEngineUS/hybrid-quantum-protein-folding/blob/main/notebooks/colab_quickstart.ipynb) **Quickstart** - Get started in 5 minutes
+- [![Open Tutorial](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChessEngineUS/hybrid-quantum-protein-folding/blob/main/notebooks/tutorial.ipynb) **Full Tutorial** - Complete walkthrough
+
+**Docker**:
+```bash
+docker pull ghcr.io/chessengineUS/hybrid-quantum-protein-folding:latest
+docker run -it ghcr.io/chessengineUS/hybrid-quantum-protein-folding:latest
+```
 
 ## 📖 Documentation
 
@@ -60,7 +78,7 @@ Unlike prior work that applies pre-specified QUBO/lattice models to toy peptides
 - CNN surrogate model (90-95% reduction in quantum queries)
 - End-to-end training via automatic differentiation
 
-## 🚀 Quick Start
+## 💻 Quick Start
 
 ### Installation
 
@@ -152,14 +170,19 @@ hybrid-quantum-protein-folding/
 │   ├── inference_demo.py
 │   └── benchmark_idrs.py
 ├── notebooks/                       # Jupyter tutorials
-│   └── tutorial.ipynb
+│   ├── colab_quickstart.ipynb       # Google Colab quickstart
+│   └── tutorial.ipynb               # Full tutorial
 ├── docs/                            # Documentation
 │   ├── GETTING_STARTED.md
 │   ├── QUICKSTART.md
 │   └── ARCHITECTURE.md
+├── .github/workflows/               # CI/CD pipelines
+│   ├── ci.yml                       # Continuous integration
+│   └── release.yml                  # Release automation
 ├── config/                          # Configuration files
 │   └── default_config.yaml
 ├── tests/                           # Unit tests
+├── Dockerfile                       # Docker container
 ├── requirements.txt                 # Dependencies
 ├── setup.py                         # Package setup
 ├── CONTRIBUTING.md                  # Contribution guidelines
@@ -210,7 +233,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ### Tutorials
 - [Getting Started Guide](docs/GETTING_STARTED.md) - Complete beginner's guide
-- [Jupyter Tutorial](notebooks/tutorial.ipynb) - Interactive walkthrough
+- [Colab Quickstart](https://colab.research.google.com/github/ChessEngineUS/hybrid-quantum-protein-folding/blob/main/notebooks/colab_quickstart.ipynb) - Try it now!
 - [Quick Start](docs/QUICKSTART.md) - Fast-track usage examples
 
 ### Background Reading
@@ -242,6 +265,8 @@ Project Link: [https://github.com/ChessEngineUS/hybrid-quantum-protein-folding](
 - **Discussions**: [GitHub Discussions](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/discussions)
 - **Examples**: [examples/](examples/)
 - **Notebooks**: [notebooks/](notebooks/)
+- **CI/CD**: [Actions](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/actions)
+- **Docker Images**: [Packages](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/pkgs/container/hybrid-quantum-protein-folding)
 
 ## ⭐ Star History
 
@@ -255,6 +280,9 @@ If you find this project useful, please consider giving it a star! ⭐
 - [x] Benchmark datasets
 - [x] Example scripts
 - [x] Comprehensive documentation
+- [x] CI/CD pipelines
+- [x] Docker containers
+- [x] Google Colab notebooks
 - [ ] Pre-trained models
 - [ ] Web interface for predictions
 - [ ] Integration with AlphaFold3
@@ -271,5 +299,9 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 **"Combining quantum superposition with learned priors to explore protein conformational space where classical methods fail."**
 
 🧬 + ⚛️ + 🤖 = 🚀
+
+[![CI Status](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/actions/workflows/ci.yml/badge.svg)](https://github.com/ChessEngineUS/hybrid-quantum-protein-folding/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ChessEngineUS/hybrid-quantum-protein-folding/blob/main/notebooks/colab_quickstart.ipynb)
 
 </div>
