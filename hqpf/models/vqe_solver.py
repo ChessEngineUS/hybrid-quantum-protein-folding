@@ -73,9 +73,9 @@ class VQESolver(nn.Module):
             # Some versions require backend argument
             self.estimator = Estimator(backend=self.backend)
         
-        # Ansatz parameters
+        # Ansatz parameters - FIXED: renamed from 'parameters' to 'theta' to avoid conflict
         n_params = self._count_parameters()
-        self.parameters = nn.Parameter(torch.randn(n_params) * 0.1)
+        self.theta = nn.Parameter(torch.randn(n_params) * 0.1)
         
         # History for tracking convergence
         self.energy_history = []
@@ -231,7 +231,7 @@ class VQESolver(nn.Module):
             Energy expectation value as torch tensor
         """
         if parameters is None:
-            parameters = self.parameters
+            parameters = self.theta
         
         # Convert to numpy
         params_np = parameters.detach().cpu().numpy()
@@ -304,14 +304,14 @@ class VQESolver(nn.Module):
         gradients = []
         shift = np.pi / 2
         
-        for k in range(self.parameters.shape[0]):
+        for k in range(self.theta.shape[0]):
             # Shift parameter forward
-            params_plus = self.parameters.clone()
+            params_plus = self.theta.clone()
             params_plus[k] += shift
             energy_plus = self.forward(hamiltonian, params_plus)
             
             # Shift parameter backward
-            params_minus = self.parameters.clone()
+            params_minus = self.theta.clone()
             params_minus[k] -= shift
             energy_minus = self.forward(hamiltonian, params_minus)
             
@@ -365,7 +365,7 @@ class VQESolver(nn.Module):
             
             result = minimize(
                 objective,
-                self.parameters.detach().cpu().numpy(),
+                self.theta.detach().cpu().numpy(),
                 method='COBYLA',
                 options={'maxiter': max_iterations, 'rhobeg': 0.1}
             )
@@ -376,9 +376,9 @@ class VQESolver(nn.Module):
         else:
             # Use PyTorch optimizer with parameter-shift gradients
             if optimizer_type == 'adam':
-                optimizer = torch.optim.Adam([self.parameters], lr=learning_rate)
+                optimizer = torch.optim.Adam([self.theta], lr=learning_rate)
             elif optimizer_type == 'sgd':
-                optimizer = torch.optim.SGD([self.parameters], lr=learning_rate)
+                optimizer = torch.optim.SGD([self.theta], lr=learning_rate)
             else:
                 raise ValueError(f"Unknown optimizer: {optimizer_type}")
             
@@ -391,7 +391,7 @@ class VQESolver(nn.Module):
                 
                 # Compute gradients via parameter-shift
                 gradients = self.compute_gradient(hamiltonian)
-                self.parameters.grad = gradients
+                self.theta.grad = gradients
                 
                 # Optimization step
                 optimizer.step()
@@ -407,7 +407,7 @@ class VQESolver(nn.Module):
                     logger.info(f"Iteration {iteration}: Energy = {energy.item():.6f}")
             
             optimal_energy = energy.item()
-            optimal_params = self.parameters.detach().cpu().numpy()
+            optimal_params = self.theta.detach().cpu().numpy()
         
         return optimal_energy, optimal_params
     
@@ -422,7 +422,7 @@ class VQESolver(nn.Module):
             Statevector as numpy array
         """
         if parameters is None:
-            parameters = self.parameters.detach().cpu().numpy()
+            parameters = self.theta.detach().cpu().numpy()
         
         circuit = self.construct_ansatz(parameters)
         
